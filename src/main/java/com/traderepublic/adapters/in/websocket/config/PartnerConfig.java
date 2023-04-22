@@ -11,4 +11,5 @@ public class PartnerConfig {
 
     String instrumentUri;
     String quotesUri;
+    boolean enabled;
 }

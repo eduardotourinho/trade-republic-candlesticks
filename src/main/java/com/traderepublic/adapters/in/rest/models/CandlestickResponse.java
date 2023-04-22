@@ -8,7 +8,7 @@ import java.util.List;
 
 @Value
 @Builder
-public class CandleStickResponse {
+public class CandlestickResponse {
 
     List<Candlestick> candlesticks;
 

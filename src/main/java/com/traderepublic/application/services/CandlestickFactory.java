@@ -2,28 +2,32 @@ package com.traderepublic.application.services;
 
 import com.traderepublic.application.models.Candlestick;
 import com.traderepublic.application.models.Quote;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
-@Service
+@Component
 public class CandlestickFactory {
 
-    public Optional<Candlestick> generateCandlestick(List<Quote> sortedQuotes) {
-        if (sortedQuotes.isEmpty()) {
+    public Optional<Candlestick> generateCandlestick(List<Quote> quotes) {
+        if (quotes.isEmpty()) {
             return Optional.empty();
         }
 
-        var openQuote = sortedQuotes.get(0);
-        var closeQuote = sortedQuotes.get(sortedQuotes.size()-1);
+        var sortedQuotes = quotes.stream()
+                .sorted(Comparator.comparing(Quote::timestamp))
+                .toList();
 
-        var maxPrice = sortedQuotes.stream()
+        var openQuote = sortedQuotes.get(0);
+        var closeQuote = sortedQuotes.get(quotes.size()-1);
+
+        var maxPrice = quotes.stream()
                 .max(Comparator.comparingDouble(Quote::price))
                 .get().price();
 
-        var minPrice = sortedQuotes.stream()
+        var minPrice = quotes.stream()
                 .min(Comparator.comparingDouble(Quote::price))
                 .get().price();
 

@@ -1,18 +1,15 @@
 spring:
   datasource:
-    url: jdbc:h2:file:./data/cadlestick-db
+    url: jdbc:h2:mem:test
     username: sa
-    password: password!
+    password: P4ssw0rd!
     driverClassName: org.h2.Driver
-  h2:
-    console.enabled: true
   jpa:
     spring.jpa.database-platform: org.hibernate.dialect.H2Dialect
-    open-in-view: true
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
 
 partner:
-  enabled: true
+  enabled: false
   instrument-uri: "ws://localhost:8032/instruments"
   quotes-uri: "ws://localhost:8032/quotes"

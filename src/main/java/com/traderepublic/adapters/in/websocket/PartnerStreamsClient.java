@@ -15,17 +15,22 @@ import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 @RequiredArgsConstructor
 public class PartnerStreamsClient {
 
-    private final PartnerConfig config;
+    private final PartnerConfig partnerConfig;
 
     private final InstrumentStreamHandler instrumentsHandler;
     private final QuotesStreamHandler quotesStreamHandler;
 
     @EventListener(ApplicationReadyEvent.class)
     public void listenWebSockets() {
+        if (!partnerConfig.isEnabled()) {
+            log.info("Partner connection is not enabled in the application");
+            return;
+        }
+
         log.info("Connecting to partner server...");
 
         var webSocketClient = new StandardWebSocketClient();
-        webSocketClient.execute(instrumentsHandler, config.getInstrumentUri());
-        webSocketClient.execute(quotesStreamHandler, config.getQuotesUri());
+        webSocketClient.execute(instrumentsHandler, partnerConfig.getInstrumentUri());
+        webSocketClient.execute(quotesStreamHandler, partnerConfig.getQuotesUri());
     }
 }

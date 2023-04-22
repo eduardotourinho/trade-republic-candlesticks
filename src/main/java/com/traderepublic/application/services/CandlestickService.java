@@ -6,13 +6,11 @@ import com.traderepublic.application.ports.in.FindCandlesticksUseCase;
 import com.traderepublic.application.ports.out.QuoteFinderPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -27,7 +25,6 @@ public class CandlestickService implements FindCandlesticksUseCase {
     private final CandlestickFactory candlestickFactory;
 
     @Override
-    @Cacheable("candlesticks")
     public List<Candlestick> getCandlesticks(String isin) {
         var groupedQuotes = groupQuotes(quoteFinder.fetchQuotes(isin, DEFAULT_AGGREGATION_MINUTES));
 
@@ -39,29 +36,52 @@ public class CandlestickService implements FindCandlesticksUseCase {
                 .collect(Collectors.toList());
     }
 
-    private Map<String, List<Quote>> groupQuotes(List<Quote> quotes) {
+    private Map<LocalTime, List<Quote>> groupQuotes(List<Quote> quotes) {
         var groupedQuotes = quotes.stream()
                 .sorted(Comparator.comparing(Quote::timestamp))
                 .collect(Collectors.groupingBy(
-                        quote -> {
-                            var localtime = LocalTime.ofInstant(quote.timestamp(), ZoneOffset.UTC);
-                            return localtime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:00"));
-                        },
+                        quote -> LocalTime.ofInstant(quote.timestamp(), ZoneOffset.UTC).withSecond(0).withNano(0),
+                        TreeMap::new,
                         Collectors.toList()
                 ));
 
-        return generateMissingTimestamps(groupedQuotes);
+        return generateMissingQuotes(groupedQuotes);
     }
 
-    private Map<String, List<Quote>> generateMissingTimestamps(Map<String, List<Quote>> quotes) {
-        // TODO: Verify if all the minutes between the min(timestamp) and max(timestamp) are present.
-        // If not, create a new entry and use the previous values
-        var dates = quotes.keySet().stream()
-                .map(LocalDateTime::parse)
-                .peek(datetime -> log.debug(datetime.toString()))
-                .toList();
+    private Map<LocalTime, List<Quote>> generateMissingQuotes(final Map<LocalTime, List<Quote>> quotes) {
+        if (quotes.isEmpty()) {
+            return quotes;
+        }
 
+        var minTime = quotes.keySet().stream().min(LocalTime::compareTo).get();
+        var maxTime = quotes.keySet().stream().max(LocalTime::compareTo).get();
+        var diffMinutes = minTime.until(maxTime, ChronoUnit.MINUTES);
+
+        for (var minute = 1; minute <= diffMinutes; minute++) {
+            var testTime = LocalTime.from(minTime).plusMinutes(minute);
+
+            if (quotes.containsKey(testTime)) {
+                continue;
+            }
+
+            var previousQuotes = findPastQuotes(quotes, testTime, minTime);
+            quotes.put(testTime, previousQuotes);
+        }
 
         return quotes;
+    }
+
+    private List<Quote> findPastQuotes(final Map<LocalTime, List<Quote>> quotes,
+                                       final LocalTime time, final LocalTime firstTime) {
+        if (time.isBefore(firstTime)) {
+            return quotes.get(firstTime);
+        }
+
+        var previousTime = LocalTime.from(time).minusMinutes(1);
+        if (!quotes.containsKey(previousTime)) {
+            return findPastQuotes(quotes, previousTime, firstTime);
+        }
+
+        return quotes.get(previousTime);
     }
 }

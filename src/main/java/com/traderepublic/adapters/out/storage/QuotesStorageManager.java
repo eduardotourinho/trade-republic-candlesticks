@@ -78,14 +78,21 @@ public class QuotesStorageManager implements InstrumentManagerPort, QuoteManager
 
     @Override
     public List<Quote> fetchQuotes(String isin, int pastMinutes) {
-        var endPeriod = LocalDateTime.now(Clock.systemUTC()).withSecond(0);
+        var endPeriod = LocalDateTime.now()
+                .withSecond(0).withNano(0).minusMinutes(1);
         var startPeriod = endPeriod.minusMinutes(pastMinutes);
 
-        var quoteEntities = quoteRepository.findByIsinAndTimestamp(isin, startPeriod.toInstant(ZoneOffset.UTC),
-                endPeriod.toInstant(ZoneOffset.UTC));
+        var instrument = instrumentRepository.findByIsin(isin);
+        if (instrument.isEmpty()) {
+            log.error("Instrument {} doesn't exist", isin);
+            return List.of();
+        }
+
+        var quoteEntities = quoteRepository.findAllByInstrumentAndTimestampBetween(instrument.get(),
+                startPeriod.toInstant(ZoneOffset.UTC), endPeriod.toInstant(ZoneOffset.UTC));
 
         return quoteEntities.stream()
-                .map(e -> new Quote(e.getInstrument().getIsin(), e.getPrice(), e.getTimestamp()))
+                .map(e -> new Quote(instrument.get().getIsin(), e.getPrice(), e.getTimestamp()))
                 .collect(Collectors.toList());
     }
 }

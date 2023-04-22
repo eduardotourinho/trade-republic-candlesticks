@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.traderepublic.adapters.in.websocket.models.InstrumentEvent;
 import com.traderepublic.application.ports.in.ManageInstrumentUseCase;
 import jakarta.annotation.Nonnull;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -19,15 +20,16 @@ public class InstrumentStreamHandler extends TextWebSocketHandler {
     private final ObjectMapper objectMapper;
     private final ManageInstrumentUseCase instrumentManager;
 
+
     @Override
-    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+    public void afterConnectionEstablished(@NonNull WebSocketSession session) throws Exception {
         log.info("Connected to instruments stream");
     }
 
     @Override
-    protected void handleTextMessage(WebSocketSession session, @Nonnull TextMessage message) throws Exception {
+    protected void handleTextMessage(@NonNull WebSocketSession session, @Nonnull TextMessage message) throws Exception {
         var instrumentEvent = objectMapper.readValue(message.getPayload(), InstrumentEvent.class);
-        log.debug("InstrumentEvent: {}", instrumentEvent);
+        log.info("InstrumentEvent: {}", instrumentEvent);
 
         if (instrumentEvent.type() == InstrumentEvent.InstrumentType.ADD) {
             instrumentManager.addInstrument(instrumentEvent.data().isin(), instrumentEvent.data().description());
