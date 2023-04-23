@@ -22,8 +22,8 @@ The tech stack used to implement this challenge is:
 
 ## Assumptions
 
-- The number of requests to get the candlesticks are small, so we can aggregate the data on real-time;
-- The deleted `Instruments` and its `Quotes` history are no longer needed so we can physically delete them from the database
+- The number of requests to get the candlesticks initially will be small enough, so we can aggregate the data in real-time;
+- The deleted `Instruments` and its `Quotes` history are no longer needed so we can physically delete them from the database;
 
 ## Future improvements
 
@@ -63,8 +63,9 @@ To run the app you can use the following gradle commands
 ```
 ./gradlew build
 ./gradlew test
-./gradlew run
+./gradlew bootRun
 ```
+
 ### IntelliJ
 If you want to use `IntelliJ` to run the application, run the file [TradeRepublicCandlesticksApplication.java](src%2Fmain%2Fjava%2Fcom%2Ftraderepublic%2FTradeRepublicCandlesticksApplication.java)
 
