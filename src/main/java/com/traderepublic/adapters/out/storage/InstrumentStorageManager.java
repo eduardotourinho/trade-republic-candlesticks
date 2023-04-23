@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class QuotesStorageManager implements InstrumentManagerPort, QuoteManagerPort, QuoteFinderPort {
+public class InstrumentStorageManager implements InstrumentManagerPort, QuoteManagerPort, QuoteFinderPort {
 
     private final InstrumentRepository instrumentRepository;
     private final QuoteRepository quoteRepository;

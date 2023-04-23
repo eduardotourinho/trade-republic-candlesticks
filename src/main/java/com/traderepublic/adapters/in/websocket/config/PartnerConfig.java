@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "partner")
 public class PartnerConfig {
 
-    String instrumentUri;
-    String quotesUri;
-    boolean enabled;
+    private String instrumentUri;
+    private String quotesUri;
+    private boolean enabled;
 }

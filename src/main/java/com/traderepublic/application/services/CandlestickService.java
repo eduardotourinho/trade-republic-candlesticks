@@ -1,5 +1,6 @@
 package com.traderepublic.application.services;
 
+import com.traderepublic.application.config.CandlestickConfig;
 import com.traderepublic.application.models.Candlestick;
 import com.traderepublic.application.models.Quote;
 import com.traderepublic.application.ports.in.FindCandlesticksUseCase;
@@ -19,14 +20,14 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CandlestickService implements FindCandlesticksUseCase {
 
-    private static final int DEFAULT_AGGREGATION_MINUTES = 30;
+    private final CandlestickConfig config;
 
     private final QuoteFinderPort quoteFinder;
     private final CandlestickFactory candlestickFactory;
 
     @Override
     public List<Candlestick> getCandlesticks(String isin) {
-        var groupedQuotes = groupQuotes(quoteFinder.fetchQuotes(isin, DEFAULT_AGGREGATION_MINUTES));
+        var groupedQuotes = groupQuotes(quoteFinder.fetchQuotes(isin, config.getAggregationTimeframeMinutes()));
 
         return groupedQuotes
                 .values().stream()

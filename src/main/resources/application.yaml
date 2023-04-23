@@ -12,6 +12,9 @@ spring:
     hibernate:
       ddl-auto: update
 
+candlesticks:
+  aggregation-timeframe-minutes: 30
+
 partner:
   enabled: true
   instrument-uri: "ws://localhost:8032/instruments"

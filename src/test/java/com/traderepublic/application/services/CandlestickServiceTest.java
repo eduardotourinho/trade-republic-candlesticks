@@ -1,15 +1,16 @@
 package com.traderepublic.application.services;
 
+import com.traderepublic.application.config.CandlestickConfig;
 import com.traderepublic.application.models.Candlestick;
 import com.traderepublic.application.models.Quote;
 import com.traderepublic.application.ports.out.QuoteFinderPort;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Named;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -28,48 +29,53 @@ import static org.mockito.Mockito.when;
 class CandlestickServiceTest {
 
     @Mock
-    private QuoteFinderPort quoteFinder;
+    private QuoteFinderPort quoteFinderMock;
     @Mock
-    private CandlestickFactory candlestickFactory;
+    private CandlestickFactory candlestickFactoryMock;
 
-    @InjectMocks
+    @Mock
+    private CandlestickConfig configMock;
+
     private CandlestickService subject;
+
+    @BeforeEach
+    public void setUp() {
+        configMock = new CandlestickConfig(30);
+        subject = new CandlestickService(configMock, quoteFinderMock, candlestickFactoryMock);
+    }
 
     @Test
     void shouldReturnEmptyIfNoQuotesInPeriod() {
         var isin = "ABC";
 
-        when(quoteFinder.fetchQuotes(isin, 30))
+        when(quoteFinderMock.fetchQuotes(isin, configMock.getAggregationTimeframeMinutes()))
                 .thenReturn(List.of());
 
         var actualCandlesticks = subject.getCandlesticks(isin);
 
         assertTrue(actualCandlesticks.isEmpty());
-        verifyNoInteractions(candlestickFactory);
+        verifyNoInteractions(candlestickFactoryMock);
     }
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("generateCandlestickTestParams")
-    void shouldGenerateCandlesticksCorrectly(String isin,
-                                    final List<List<Quote>> candlestickQuotes,
-                                    final List<Candlestick> candlesticks,
-                                    final List<Candlestick> expectedCandlesticks) {
+    void shouldGenerateCandlesticksCorrectly(final String isin,
+                                             final List<List<Quote>> candlestickQuotes,
+                                             final List<Candlestick> candlesticks,
+                                             final List<Candlestick> expectedCandlesticks) {
 
         List<Quote> quotes = candlestickQuotes.stream()
                 .flatMap(Collection::stream)
                 .toList();
 
-        when(quoteFinder.fetchQuotes(eq(isin), anyInt()))
+        when(quoteFinderMock.fetchQuotes(eq(isin), anyInt()))
                 .thenReturn(quotes);
 
         IntStream.range(0, candlestickQuotes.size())
-                .forEach(index -> {
-                    var quoteList = candlestickQuotes.get(index);
-                    var candlestick = candlesticks.get(index);
-
-                    when(candlestickFactory.generateCandlestick(quoteList))
-                            .thenReturn(Optional.of(candlestick));
-                });
+                .forEach(index ->
+                        when(candlestickFactoryMock.generateCandlestick(candlestickQuotes.get(index)))
+                                .thenReturn(Optional.of(candlesticks.get(index)))
+                );
 
         var actualCandlesticks = subject.getCandlesticks(isin);
 

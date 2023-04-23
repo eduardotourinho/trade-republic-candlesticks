@@ -11,5 +11,3 @@ spring:
 
 partner:
   enabled: false
-  instrument-uri: "ws://localhost:8032/instruments"
-  quotes-uri: "ws://localhost:8032/quotes"

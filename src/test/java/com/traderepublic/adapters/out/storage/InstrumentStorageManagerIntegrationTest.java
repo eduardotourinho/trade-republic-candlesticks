@@ -16,6 +16,7 @@ import org.springframework.test.context.ActiveProfiles;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -23,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(OutputCaptureExtension.class)
 @ActiveProfiles("integration-test")
 @SpringBootTest
-class QuotesStorageManagerIntegrationTest {
+class InstrumentStorageManagerIntegrationTest {
 
     @Autowired
     private InstrumentRepository instrumentRepository;
@@ -32,7 +33,7 @@ class QuotesStorageManagerIntegrationTest {
     private QuoteRepository quoteRepository;
 
     @Autowired
-    private QuotesStorageManager subject;
+    private InstrumentStorageManager subject;
 
     @AfterEach
     public void cleanUp() {
@@ -62,6 +63,38 @@ class QuotesStorageManagerIntegrationTest {
         var deletedEntity = instrumentRepository.findByIsin("ABC");
 
         assertTrue(deletedEntity.isEmpty());
+    }
+
+    @Test
+    void shouldDeleteInstrumentAndAllTheQuotesFromDB() {
+        subject.addInstrument("ABC", "Test instrument");
+
+        var savedEntity = instrumentRepository.findByIsin("ABC");
+        assertTrue(savedEntity.isPresent());
+
+        quoteRepository.saveAll(List.of(
+                QuoteEntity.builder()
+                        .timestamp(Instant.now().minus(1, ChronoUnit.MINUTES))
+                        .price(32.0)
+                        .instrument(savedEntity.get())
+                        .build(),
+                QuoteEntity.builder()
+                        .instrument(savedEntity.get())
+                        .price(26.4)
+                        .timestamp(Instant.now())
+                        .build()
+        ));
+
+        var savedQuotes = (List<QuoteEntity>) quoteRepository.findAll();
+        assertEquals(2, savedQuotes.size());
+
+        subject.deleteInstrument("ABC");
+
+        var deletedEntity = instrumentRepository.findByIsin("ABC");
+        var deletedQuotes = (List<QuoteEntity>) quoteRepository.findAll();
+
+        assertTrue(deletedEntity.isEmpty());
+        assertTrue(deletedQuotes.isEmpty());
     }
 
     @Test

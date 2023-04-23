@@ -1,13 +1,14 @@
 package com.traderepublic.adapters.in.rest.models;
 
-import lombok.Builder;
-import lombok.Value;
+import lombok.*;
 
 import java.time.Instant;
 import java.util.List;
 
-@Value
+@Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class CandlestickResponse {
 
     List<Candlestick> candlesticks;

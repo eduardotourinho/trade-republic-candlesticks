@@ -22,14 +22,14 @@ public class InstrumentStreamHandler extends TextWebSocketHandler {
 
 
     @Override
-    public void afterConnectionEstablished(@NonNull WebSocketSession session) throws Exception {
+    public void afterConnectionEstablished(@NonNull WebSocketSession session) {
         log.info("Connected to instruments stream");
     }
 
     @Override
     protected void handleTextMessage(@NonNull WebSocketSession session, @Nonnull TextMessage message) throws Exception {
         var instrumentEvent = objectMapper.readValue(message.getPayload(), InstrumentEvent.class);
-        log.info("InstrumentEvent: {}", instrumentEvent);
+        log.debug("InstrumentEvent: {}", instrumentEvent);
 
         if (instrumentEvent.type() == InstrumentEvent.InstrumentType.ADD) {
             instrumentManager.addInstrument(instrumentEvent.data().isin(), instrumentEvent.data().description());
