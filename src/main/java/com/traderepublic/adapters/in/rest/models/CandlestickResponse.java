@@ -2,7 +2,6 @@ package com.traderepublic.adapters.in.rest.models;
 
 import lombok.*;
 
-import java.time.Instant;
 import java.util.List;
 
 @Data
@@ -17,8 +16,8 @@ public class CandlestickResponse {
     @Builder
     public static class Candlestick {
 
-        Instant openTimestamp;
-        Instant closeTimestamp;
+        String openTimestamp;
+        String closeTimestamp;
         Double openPrice;
         Double closingPrice;
         Double highPrice;

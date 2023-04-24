@@ -35,17 +35,17 @@ class CandlestickControllerIntegrationTest {
     public void setUp() {
         var candlesticks = List.of(
                 Candlestick.builder()
-                        .openTimestamp(Instant.parse("2023-04-21T13:04:10.00Z"))
+                        .openTimestamp(Instant.parse("2023-04-21T13:04:00.00Z"))
                         .openPrice(12.0)
-                        .closeTimestamp(Instant.parse("2023-04-21T13:04:56.00Z"))
+                        .closeTimestamp(Instant.parse("2023-04-21T13:05:00.00Z"))
                         .closingPrice(30.0)
                         .highPrice(32.1)
                         .lowPrice(9.0)
                         .build(),
                 Candlestick.builder()
-                        .openTimestamp(Instant.parse("2023-04-21T13:03:02.00Z"))
+                        .openTimestamp(Instant.parse("2023-04-21T13:03:00.00Z"))
                         .openPrice(12.0)
-                        .closeTimestamp(Instant.parse("2023-04-21T13:03:52.00Z"))
+                        .closeTimestamp(Instant.parse("2023-04-21T13:04:00.00Z"))
                         .closingPrice(30.0)
                         .highPrice(32.1)
                         .lowPrice(9.0)
@@ -57,20 +57,20 @@ class CandlestickControllerIntegrationTest {
     }
 
     @Test
-    public void shouldReturnCandlestick() {
+    public void shouldReturnCandlestickResponse() {
         final var expectedCandlestickResponse = List.of(
                 CandlestickResponse.Candlestick.builder()
-                        .openTimestamp(Instant.parse("2023-04-21T13:04:10.00Z"))
+                        .openTimestamp("2023-04-21 13:04:00")
                         .openPrice(12.0)
-                        .closeTimestamp(Instant.parse("2023-04-21T13:04:56.00Z"))
+                        .closeTimestamp("13:05:00")
                         .closingPrice(30.0)
                         .highPrice(32.1)
                         .lowPrice(9.0)
                         .build(),
                 CandlestickResponse.Candlestick.builder()
-                        .openTimestamp(Instant.parse("2023-04-21T13:03:02.00Z"))
+                        .openTimestamp("2023-04-21 13:03:00")
                         .openPrice(12.0)
-                        .closeTimestamp(Instant.parse("2023-04-21T13:03:52.00Z"))
+                        .closeTimestamp("13:04:00")
                         .closingPrice(30.0)
                         .highPrice(32.1)
                         .lowPrice(9.0)

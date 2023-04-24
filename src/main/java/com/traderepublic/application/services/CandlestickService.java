@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
@@ -27,7 +29,12 @@ public class CandlestickService implements FindCandlesticksUseCase {
 
     @Override
     public List<Candlestick> getCandlesticks(String isin) {
-        var groupedQuotes = groupQuotes(quoteFinder.fetchQuotes(isin, config.getAggregationTimeframeMinutes()));
+        var endPeriod = LocalDateTime.now(Clock.systemUTC())
+                .withSecond(0).withNano(0).minusMinutes(1);
+        var startPeriod = endPeriod.minusMinutes(config.getAggregationTimeframeMinutes());
+
+        var groupedQuotes = groupQuotes(quoteFinder.fetchQuotes(isin, startPeriod.toInstant(ZoneOffset.UTC),
+                endPeriod.toInstant(ZoneOffset.UTC)));
 
         return groupedQuotes
                 .values().stream()

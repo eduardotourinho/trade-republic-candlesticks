@@ -14,8 +14,6 @@ import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
@@ -126,6 +124,10 @@ class InstrumentStorageManagerIntegrationTest {
 
     @Test
     void shouldFindAllQuotesFromAPeriod() {
+        // Prepare
+        var startTimestamp = Instant.parse("2023-04-23T13:30:00.00Z");
+        var endTimestamp = Instant.parse("2023-04-23T14:00:00.00Z");
+
         subject.addInstrument("ABC", "Test instrument");
 
         var instrumentEntity = instrumentRepository.findByIsin("ABC");
@@ -137,13 +139,18 @@ class InstrumentStorageManagerIntegrationTest {
         var allQuotes = (List<QuoteEntity>) quoteRepository.findAll();
         assertEquals(quotesToSave.size(), allQuotes.size());
 
-        var actualQuotes = subject.fetchQuotes("ABC", 30);
+        // Act
+        var actualQuotes = subject.fetchQuotes("ABC", startTimestamp, endTimestamp);
 
+        // Assert
         assertEquals(4, actualQuotes.size());
     }
 
     @Test
     void shouldLogErrorIfInstrumentNotFoundWhenFindingQuotes(CapturedOutput output) {
+        var startTimestamp = Instant.parse("2023-04-23T13:30:00.00Z");
+        var endTimestamp = Instant.parse("2023-04-23T14:00:00.00Z");
+
         subject.addInstrument("ABC", "Test instrument");
 
         var instrumentEntity = instrumentRepository.findByIsin("ABC");
@@ -152,7 +159,7 @@ class InstrumentStorageManagerIntegrationTest {
         var quotesToSave = getQuoteEntityList(instrumentEntity.get());
         quoteRepository.saveAll(quotesToSave);
 
-        var actualQuotes = subject.fetchQuotes("DEF", 30);
+        var actualQuotes = subject.fetchQuotes("DEF", startTimestamp, endTimestamp);
 
         assertTrue(actualQuotes.isEmpty());
         assertTrue(output.getOut().contains("Instrument DEF doesn't exist"));
@@ -163,32 +170,32 @@ class InstrumentStorageManagerIntegrationTest {
                 QuoteEntity.builder()
                         .instrument(instrumentEntity)
                         .price(70.2)
-                        .timestamp(LocalDateTime.now().minusMinutes(40).toInstant(ZoneOffset.UTC))
+                        .timestamp(Instant.parse("2023-04-23T13:29:59.00Z"))
                         .build(),
                 QuoteEntity.builder()
                         .instrument(instrumentEntity)
                         .price(60.2)
-                        .timestamp(LocalDateTime.now().minusMinutes(30).withSecond(0).toInstant(ZoneOffset.UTC))
+                        .timestamp(Instant.parse("2023-04-23T13:30:00.00Z"))
                         .build(),
                 QuoteEntity.builder()
                         .instrument(instrumentEntity)
                         .price(50.2)
-                        .timestamp(LocalDateTime.now().minusMinutes(20).toInstant(ZoneOffset.UTC))
+                        .timestamp(Instant.parse("2023-04-23T13:32:24.00Z"))
                         .build(),
                 QuoteEntity.builder()
                         .instrument(instrumentEntity)
                         .price(40.2)
-                        .timestamp(LocalDateTime.now().minusMinutes(10).withSecond(10).toInstant(ZoneOffset.UTC))
+                        .timestamp(Instant.parse("2023-04-23T13:45:48.00Z"))
                         .build(),
                 QuoteEntity.builder()
                         .instrument(instrumentEntity)
                         .price(30.2)
-                        .timestamp(LocalDateTime.now().minusMinutes(5).withSecond(41).toInstant(ZoneOffset.UTC))
+                        .timestamp(Instant.parse("2023-04-23T13:59:59.00Z"))
                         .build(),
                 QuoteEntity.builder()
                         .instrument(instrumentEntity)
                         .price(30.2)
-                        .timestamp(LocalDateTime.now().toInstant(ZoneOffset.UTC))
+                        .timestamp(Instant.parse("2023-04-23T14:00:00.00Z"))
                         .build()
         );
     }
